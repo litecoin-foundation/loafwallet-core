@@ -44,7 +44,7 @@
 #include <arpa/inet.h>
 
 #if BITCOIN_TESTNET
-#define MAGIC_NUMBER 0xf1c8d2fdc
+#define MAGIC_NUMBER 0xf1c8d2fd
 #else
 #define MAGIC_NUMBER 0xdbb6c0fb
 #endif
