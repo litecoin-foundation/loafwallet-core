@@ -61,8 +61,8 @@ extern "C" {
 #define SERVICES_NODE_NETWORK 0x01 // services value indicating a node carries full blocks, not just headers
 #define SERVICES_NODE_BLOOM   0x04 // BIP111: https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki
 
-#define BR_VERSION "0.6.2"
-#define USER_AGENT "/breadwallet:" BR_VERSION "/"
+#define BR_VERSION "1.0.0"
+#define USER_AGENT "/loaf:" BR_VERSION "/"
 
 // explanation of message types at: https://en.bitcoin.it/wiki/Protocol_specification
 #define MSG_VERSION     "version"
