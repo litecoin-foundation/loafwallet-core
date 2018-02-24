@@ -642,7 +642,7 @@ BRTransaction *BRWalletCreateTxForOutputs(BRWallet *wallet, const BRTxOutput out
         BRTransactionFree(transaction);
         transaction = NULL;
     }
-    else if (transaction && balance - (amount + feeAmount) >= minAmount) { // add change output
+    else if (transaction && balance - (amount + feeAmount) > minAmount) { // add change output
         BRWalletUnusedAddrs(wallet, &addr, 1, 1);
         uint8_t script[BRAddressScriptPubKey(NULL, 0, addr.s)];
         size_t scriptLen = BRAddressScriptPubKey(script, sizeof(script), addr.s);
@@ -935,7 +935,7 @@ void BRWalletUpdateTransactions(BRWallet *wallet, const UInt256 txHashes[], size
     BRTransaction *tx;
     UInt256 hashes[txCount];
     int needsUpdate = 0;
-    size_t i, j;
+    size_t i, j, k;
     
     assert(wallet != NULL);
     assert(txHashes != NULL || txCount == 0);
@@ -949,6 +949,13 @@ void BRWalletUpdateTransactions(BRWallet *wallet, const UInt256 txHashes[], size
         tx->blockHeight = blockHeight;
         
         if (_BRWalletContainsTx(wallet, tx)) {
+            for (k = array_count(wallet->transactions); k > 0; k--) { // remove and re-insert tx to keep wallet sorted
+                if (! BRTransactionEq(wallet->transactions[k - 1], tx)) continue;
+                array_rm(wallet->transactions, k - 1);
+                _BRWalletInsertTx(wallet, tx);
+                break;
+            }
+            
             hashes[j++] = txHashes[i];
             if (BRSetContains(wallet->pendingTx, tx) || BRSetContains(wallet->invalidTx, tx)) needsUpdate = 1;
         }
@@ -1090,8 +1097,8 @@ uint64_t BRWalletFeeForTxSize(BRWallet *wallet, size_t size)
 // fee that will be added for a transaction of the given amount
 uint64_t BRWalletFeeForTxAmount(BRWallet *wallet, uint64_t amount)
 {
-    static const uint8_t dummyScript[] = { OP_DUP, OP_HASH160, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                           0, 0, OP_EQUALVERIFY, OP_CHECKSIG };
+    static const uint8_t dummyScript[] = { OP_DUP, OP_HASH160, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                           0, 0, 0, 0, 0, 0, 0, 0, 0, OP_EQUALVERIFY, OP_CHECKSIG };
     BRTxOutput o = BR_TX_OUTPUT_NONE;
     BRTransaction *tx;
     uint64_t fee = 0, maxAmount = 0;

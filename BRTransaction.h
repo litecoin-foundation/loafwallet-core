@@ -98,6 +98,9 @@ typedef struct {
 // returns a newly allocated empty transaction that must be freed by calling BRTransactionFree()
 BRTransaction *BRTransactionNew(void);
 
+// returns a deep copy of tx and that must be freed by calling BRTransactionFree()
+BRTransaction *BRTransactionCopy(const BRTransaction *tx);
+
 // buf must contain a serialized tx
 // retruns a transaction that must be freed by calling BRTransactionFree()
 BRTransaction *BRTransactionParse(const uint8_t *buf, size_t bufLen);
@@ -127,7 +130,7 @@ uint64_t BRTransactionStandardFee(const BRTransaction *tx);
 int BRTransactionIsSigned(const BRTransaction *tx);
 
 // adds signatures to any inputs with NULL signatures that can be signed with any keys
-// forkId is 0 for bitcoin, 0x40 for b-cash
+// forkId is 0 for bitcoin, 0x40 for b-cash, 0x4f for b-gold
 // returns true if tx is signed
 int BRTransactionSign(BRTransaction *tx, int forkId, BRKey keys[], size_t keysCount);
 

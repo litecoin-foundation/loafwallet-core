@@ -41,99 +41,10 @@
 
 #define PROTOCOL_TIMEOUT      20.0
 #define MAX_CONNECT_FAILURES  20 // notify user of network problems after this many connect failures in a row
-#define CHECKPOINT_COUNT      (sizeof(checkpoint_array)/sizeof(*checkpoint_array))
-#define DNS_SEEDS_COUNT       (sizeof(dns_seeds)/sizeof(*dns_seeds))
-#define GENESIS_BLOCK_HASH    (UInt256Reverse(u256_hex_decode(checkpoint_array[0].hash)))
 #define PEER_FLAG_SYNCED      0x01
 #define PEER_FLAG_NEEDSUPDATE 0x02
 
-#if BITCOIN_TESTNET
-
-static const struct { uint32_t height; const char *hash; uint32_t timestamp; uint32_t target; } checkpoint_array[] = {
-    { 0, "4966625a4b2851d9fdee139e56211a0d88575f59ed816ff5e6a63deb4e3e29a0", 1486949366, 0x1e0ffff0 }
-};
-
-static const char *dns_seeds[] = {
-    "testnet-seed.ltc.xurious.com.",
-    "seed-b.litecoin.loshan.co.uk.",
-    "dnsseed-testnet.thrasher.io."
-};
-
-#else // main net
-
-// blockchain checkpoints - these are also used as starting points for partial chain downloads, so they need to be at
-// difficulty transition boundaries in order to verify the block difficulty at the immediately following transition
-static const struct { uint32_t height; const char *hash; uint32_t timestamp; uint32_t target; } checkpoint_array[] = {
-    { 0, "12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2", 1317972665, 0x1e0ffff0 },
-    { 20160, "633036c8df655531c2449b2d09b264cc0b49d945a89be23fd3c1a97361ca198c", 1319798300, 0x1d055262 },
-    { 40320, "d148cdd2cf44069cef4b63f0feaf30a8d291ca9ea9ba7e83f226b9738c1d5e9c", 1322522019, 0x1d018053 },
-    { 60480, "3250f0a560d55f039c34bfaee1b71297aa5104ac6641778f9a87d73232d12c6c", 1325540574, 0x1d00e848 },
-    { 80640, "bedc0a090b740b1902d870aeb6caa89040a24e7d670d46f8ef035fd9d2e9ce80", 1328779944, 0x1d00ab92 },
-    { 100800, "7b0b620d15f781faaaa73b43607a49d5becb2b803ef19b4010014646cc177a61", 1331873688, 0x1d00ae9f },
-    { 120960, "dbd6249f30e5690890bc03dabcc0a526c46adcde572be06af4075b6ea28aa251", 1334881566, 0x1d009e48 },
-    { 141120, "5d5e15a45cecf2b9528e36e63c407167423a2f9963a96bbce3b67b75fd10be2a", 1338009318, 0x1d00d6a6 },
-    { 161280, "f595c754d0abcfe3616573bfabee01b230ec0ea6b2f2894c40214ea23d772b6c", 1340918301, 0x1d008881 },
-    { 181440, "d7fa3152959f3c25e33edf825f7cbef75ee651d5f9183cc4ed8d19d57b8f35a4", 1343534530, 0x1c1cd430 },
-    { 201600, "d481df8e8ce144fca9ae6b3157cc706e903c6ea161a13d2c421270354a02d6d0", 1346567025, 0x1c1c89e8 },
-    { 221760, "88cf3446129161a633050244f112e3041a2d53152ee9293984b20f468fbadb8a", 1349481542, 0x1c135d42 },
-    { 241920, "8619aa9c734b517bd3a707278ee3632c96570f3e1fd804194bdfc0b02d1b6c4e", 1352384870, 0x1c0b39e8 },
-    { 262080, "13a5d47f01fe3ab17ebf2b15b605efa41efe06b02bb685bc2ad4cec22af0b478", 1355560195, 0x1c0a01e5 },
-    { 282240, "8932095fba44bd6860fd71745c0dca908769221a47166ab1fb442b6cefcd53fb", 1358801720, 0x1c0ced21 },
-    { 302400, "e798d897a837bf4989d329266128754ec1cbeff1eb0c0afd67f71d2b7c44bdaa", 1361913149, 0x1c102ea7 },
-    { 322560, "3e5857760633de4604d388fed7126a22ba840ea320c8cde6a84df981bc8b751d", 1364498291, 0x1c02a944 },
-    { 342720, "33f62e026a202be550e8a9df37d638d38991553544e279cb264123378bf46042", 1367113967, 0x1c0095a5 },
-    { 362880, "77a4b194e8c7f6600ed622b8f60cb9d96eeb0a0b837201e605de14016edfda39", 1370052623, 0x1b6929f2 },
-    { 383040, "5c0a443361c1356796a7db472c69433b6ce6108d61e4403fd9a9d91e01009ce3", 1372971948, 0x1b481262 },
-    { 403200, "ef78aa1925cc51ff8dc3a1e59f389c89845fb8b9e566348222e663e963e67640", 1376014028, 0x1b4b858d },
-    { 423360, "7b23f9447b8078c8fc0e832e4b56f1d2afa758382e254593b6b72a8fc6020150", 1379024440, 0x1b438e6a },
-    { 443520, "37d668803ed1efc24ffab4a2a90da9ac92679acf68370d7570f042c2bd6d651b", 1382034998, 0x1b3f864f },
-    { 463680, "260c78e92a390b9eb4d8f5d9324a33d0222943f119b324de53452d48bd7bd7f4", 1384968613, 0x1b2ddc00 },
-    { 483840, "759de6c4e6161fc8c996cf0d5e012ee0afc52a037e657dd54e85da9a9f803633", 1387792541, 0x1b167254 },
-    { 504000, "97db0624d3d5137bc085f0d731607314972bb4124b85b73420ef9aa5fc10d640", 1390892377, 0x1b1aa868 },
-    { 524160, "1d033d3abedb7faa15dad1bbe9c7fc7151746537cf091584be567d321e7c5cd0", 1393845878, 0x1b120577 },
-    { 544320, "95ae252971d1ec9deeed1ed19fe9537e04348a82839a9e2bf8856faaa03e324e", 1396719779, 0x1b0a9622 },
-    { 564480, "c876276bf12754c2b265787d9e7ab83d429e59761dc63057f728529018db7834", 1399724592, 0x1b099dce },
-    { 584640, "df5454af79491c392fe740b5efd47afbe1cb53cd8d86be3ab9c97fdd2786d237", 1402630524, 0x1b065b94 },
-    { 604800, "43c1a80b8abaf57817e5daea9cfdde99ea5f324705779045792ccad52d54f3d4", 1405459509, 0x1b033d34 },
-    { 624960, "ccac71fafe98107b81ac3e0eed41190e4d47600962c93c49db8843b53f760bda", 1408389228, 0x1b02552d },
-    { 645120, "9b7ddc3753c5138fc471accd15f9730020e828bc69058f2e382549c7c0ffba0f", 1411376787, 0x1b020a10 },
-    { 665280, "163c902de2306f22922754f83edacc97a87617d1e3413af7c9808e702bf1a383", 1414354222, 0x1b01bce9 },
-    { 685440, "29d2328990dda4c4870846d4e3d573785452bed68e6013930a83fc8d5fe89b09", 1417289378, 0x1b01473b },
-    { 705600, "e350118d9047c1ca5f047a1b1ee400562fb0cfb8b3c8032b56b8545b456a03ab", 1420305710, 0x1b01399e },
-    { 725760, "6b2ac7ffb71fc5056c00fee8404813d7ea98e5f303a5ddb26c09fb397b51b7e7", 1423407371, 0x1b01905e },
-    { 745920, "04809a35ff6e5054e21d14582072605b812b7d4ae11d3450e7c03a7237e1d35d", 1426441593, 0x1b019b8c },
-    { 766080, "ba9e143a958c917753785f11c143ca62f928748c33888278fcaea96f054f15d2", 1429473619, 0x1b019e8f },
-    { 786240, "d1b9fa6999f7a09d1dc52511750e47d263aaa7ea4a262762fff8665890d631a5", 1432507384, 0x1b01a8ec },
-    { 806400, "e2363e8b3e8f237b9b1bfc1c72ede80fef2c7bd1aabcd78afed82065a194b960", 1435516150, 0x1b019268 },
-    { 826560, "e12ce49268950a38fd7f0bab0d2a5edd9799201c1f3e9441a7602428556c839d", 1438510426, 0x1b016999 },
-    { 846720, "6f5d94d7cfd01f1dbf4aa631b987f8e2ec9d0c57720604787b816bafe34192a8", 1441561050, 0x1b0187a3 },
-    { 866880, "72a9f3d3710fc6c96f87dd8fca0e033a1a89f69a4c2fd8944fd1d50e6772021e", 1444547836, 0x1b0157fd },
-    { 887040, "089c03de0c0dd0dffaa044fd5a3b51679be2ae34b048a8d6bcc39aab664c156a", 1447578790, 0x1b015f6a },
-    { 889056, "910af99e39a6f9436bf4710a09ee19483e9b9b3f131dc9bef37dbe5eac72031f", 1447887833, 0x1b016720 },
-    { 901152, "cfccdf8e3830ae4879e910051ac3dc583b4fb45b83be3a38019e5d9326dfa223", 1449698771, 0x1b015b0e },
-    { 913248, "9784249cbeccd4df8d7701287da3002a6de4a56618248f84f37187dbf4ec6efc", 1451495881, 0x1b014465 },
-    { 921312, "ab2357460c0a20caebfab76a7939c4e64a5068eddce4fbec749089be2e88e702", 1452685882, 0x1b012ee0 },
-    { 933408, "f9f3fbcbb1fa40d0f9a1724085ac7cadaa414edd97c436571d06b3b5f3b46956", 1454513411, 0x1b01386f },
-    { 941472, "4fddb941d414f071c29f100da2a160cf527397fc9a7a9c9d0a849b6f67799042", 1455719547, 0x1b0133ec },
-    { 953568, "e46e01cf1239cffa69408ac162d517bac5a4899972e0328fd0ba4d93e8ad3764", 1457542869, 0x1b013c91 },
-    { 961632, "bfc01091cb21ea81dd079fcee6cf7910087281bfdbcb1ad9e5dbc226b5f45a86", 1458730622, 0x1b012535 },
-    { 973728, "6316b454ead6c97be48c98979ec9ebb49763c21d436f47ff6918f02a58b46cec", 1460575822, 0x1b014319 },
-    { 981792, "155bc8fb717564bd2dd600cedcb39d8a7a64070e3bc1b90e7be62168e7b35c82", 1461788191, 0x1b01436f },
-    { 993888, "1d80e7793bd9e16e0ce84d93b105d6732ed63e1a6fe491c1b7ea310e75eb504e", 1463613744, 0x1b014cbd },
-    { 1001952, "eccbede26ac99ea996377972d5bd05b9306bcc6ac1f4071f1587e3094a704dff", 1464900396, 0x1b01a29e },
-    { 1058400, "76ce37c66d449a4ffbfc35674cf932da701066a001dc223754f9250dd2bdbc62", 1473296285, 0x1b013ca7 },
-    { 1260000, "85a22b528d805bf7a641d1d7c6d96ef5054beda3dcab6be7b83f2e3df24b33a8", 1502976600, 0x1a25a0d3 }
-};
-
-static const char *dns_seeds[] = {
-    "dnsseed.litecointools.com.",
-    "dnsseed.litecoinpool.org.",
-    "seed-a.litecoin.loshan.co.uk.",
-    "dnsseed.thrasher.io.",
-    "dnsseed.koin-project.com."
-};
-
-#endif
+#define genesis_block_hash(params) UInt256Reverse((params)->checkpoints[0].hash)
 
 typedef struct {
     BRPeerManager *manager;
@@ -256,6 +167,7 @@ inline static int _BRBlockHeightEq(const void *block, const void *otherBlock)
 }
 
 struct BRPeerManagerStruct {
+    const BRChainParams *params;
     BRWallet *wallet;
     int isConnected, connectFailureCount, misbehavinCount, dnsThreadCount, maxConnectCount;
     BRPeer *peers, *downloadPeer, fixedPeer, **connectedPeers;
@@ -342,7 +254,7 @@ static size_t _BRPeerManagerBlockLocators(BRPeerManager *manager, UInt256 locato
         }
     }
 
-    if (locators && i < locatorsCount) locators[i] = GENESIS_BLOCK_HASH;
+    if (locators && i < locatorsCount) locators[i] = genesis_block_hash(manager->params);
     return ++i;
 }
 
@@ -768,7 +680,7 @@ static void *_findPeersThreadRoutine(void *arg)
 
     for (addr = addrList; addr && ! UInt128IsZero(*addr); addr++) {
         age = 24*60*60 + BRRand(2*24*60*60); // add between 1 and 3 days
-        array_add(manager->peers, ((BRPeer) { *addr, STANDARD_PORT, services, now - age, 0 }));
+        array_add(manager->peers, ((BRPeer) { *addr, manager->params->standardPort, services, now - age, 0 }));
     }
 
     manager->dnsThreadCount--;
@@ -781,7 +693,7 @@ static void *_findPeersThreadRoutine(void *arg)
 // DNS peer discovery
 static void _BRPeerManagerFindPeers(BRPeerManager *manager)
 {
-    static const uint64_t services = SERVICES_NODE_NETWORK | SERVICES_NODE_BLOOM;
+    uint64_t services = SERVICES_NODE_NETWORK | SERVICES_NODE_BLOOM | manager->params->services;
     time_t now = time(NULL);
     struct timespec ts;
     pthread_t thread;
@@ -796,18 +708,18 @@ static void _BRPeerManagerFindPeers(BRPeerManager *manager)
         manager->peers[0].timestamp = now;
     }
     else {
-        for (size_t i = 1; i < DNS_SEEDS_COUNT; i++) {
+        for (size_t i = 1; manager->params->dnsSeeds[i]; i++) {
             info = calloc(1, sizeof(BRFindPeersInfo));
             assert(info != NULL);
             info->manager = manager;
-            info->hostname = dns_seeds[i];
+            info->hostname = manager->params->dnsSeeds[i];
             info->services = services;
             if (pthread_attr_init(&attr) == 0 && pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0 &&
                 pthread_create(&thread, &attr, _findPeersThreadRoutine, info) == 0) manager->dnsThreadCount++;
         }
 
-        for (addr = addrList = _addressLookup(dns_seeds[0]); addr && ! UInt128IsZero(*addr); addr++) {
-            array_add(manager->peers, ((BRPeer) { *addr, STANDARD_PORT, services, now, 0 }));
+        for (addr = addrList = _addressLookup(manager->params->dnsSeeds[0]); addr && ! UInt128IsZero(*addr); addr++) {
+            array_add(manager->peers, ((BRPeer) { *addr, manager->params->standardPort, services, now, 0 }));
         }
 
         if (addrList) free(addrList);
@@ -835,7 +747,11 @@ static void _peerConnected(void *info)
     if (peer->timestamp > now + 2*60*60 || peer->timestamp < now - 2*60*60) peer->timestamp = now; // sanity check
 
     // TODO: XXX does this work with 0.11 pruned nodes?
-    if (! (peer->services & SERVICES_NODE_NETWORK)) {
+    if ((peer->services & manager->params->services) != manager->params->services) {
+        peer_log(peer, "unsupported node type");
+        BRPeerDisconnect(peer);
+    }
+    else if ((peer->services & SERVICES_NODE_NETWORK) != SERVICES_NODE_NETWORK) {
         peer_log(peer, "node doesn't carry full blocks");
         BRPeerDisconnect(peer);
     }
@@ -843,11 +759,7 @@ static void _peerConnected(void *info)
         peer_log(peer, "node isn't synced");
         BRPeerDisconnect(peer);
     }
-    else if ((peer->services & SERVICES_NODE_BCASH) == SERVICES_NODE_BCASH) {
-        peer_log(peer, "b-cash nodes not supported");
-        BRPeerDisconnect(peer);
-    }
-    else if (BRPeerVersion(peer) >= 70011 && ! (peer->services & SERVICES_NODE_BLOOM)) {
+    else if (BRPeerVersion(peer) >= 70011 && (peer->services & SERVICES_NODE_BLOOM) != SERVICES_NODE_BLOOM) {
         peer_log(peer, "node doesn't support SPV mode");
         BRPeerDisconnect(peer);
     }
@@ -1033,7 +945,7 @@ static void _peerRelayedTx(void *info, BRTransaction *tx)
     size_t relayCount = 0;
 
     pthread_mutex_lock(&manager->lock);
-    peer_log(peer, "relayed tx: %s", u256_hex_encode(tx->txHash));
+    peer_log(peer, "relayed tx: %s", u256hex(tx->txHash));
 
     for (size_t i = array_count(manager->publishedTx); i > 0; i--) { // see if tx is in list of published tx
         if (UInt256Eq(manager->publishedTxHashes[i - 1], tx->txHash)) {
@@ -1117,7 +1029,7 @@ static void _peerHasTx(void *info, UInt256 txHash)
 
     pthread_mutex_lock(&manager->lock);
     tx = BRWalletTransactionForHash(manager->wallet, txHash);
-    peer_log(peer, "has tx: %s", u256_hex_encode(txHash));
+    peer_log(peer, "has tx: %s", u256hex(txHash));
 
     for (size_t i = array_count(manager->publishedTx); i > 0; i--) { // see if tx is in list of published tx
         if (UInt256Eq(manager->publishedTxHashes[i - 1], txHash)) {
@@ -1168,7 +1080,7 @@ static void _peerRejectedTx(void *info, UInt256 txHash, uint8_t code)
     BRTransaction *tx, *t;
 
     pthread_mutex_lock(&manager->lock);
-    peer_log(peer, "rejected tx: %s", u256_hex_encode(txHash));
+    peer_log(peer, "rejected tx: %s", u256hex(txHash));
     tx = BRWalletTransactionForHash(manager->wallet, txHash);
     _BRTxPeerListRemovePeer(manager->txRequests, txHash, peer);
 
@@ -1211,7 +1123,7 @@ static int _BRPeerManagerVerifyBlock(BRPeerManager *manager, BRMerkleBlock *bloc
 
         if (! b) {
             peer_log(peer, "missing previous difficulty tansition time, can't verify blockHash: %s",
-                     u256_hex_encode(block->blockHash));
+                     u256hex(block->blockHash));
             r = 0;
         }
         else {
@@ -1231,9 +1143,9 @@ static int _BRPeerManagerVerifyBlock(BRPeerManager *manager, BRMerkleBlock *bloc
     }
 
     // verify block difficulty
-    if (r && ! BRMerkleBlockVerifyDifficulty(block, prev, transitionTime)) {
+    if (r && ! manager->params->verifyDifficulty(block, prev, transitionTime)) {
         peer_log(peer, "relayed block with invalid difficulty target %x, blockHash: %s", block->target,
-                 u256_hex_encode(block->blockHash));
+                 u256hex(block->blockHash));
         r = 0;
     }
 
@@ -1243,8 +1155,7 @@ static int _BRPeerManagerVerifyBlock(BRPeerManager *manager, BRMerkleBlock *bloc
         // verify blockchain checkpoints
         if (checkpoint && ! BRMerkleBlockEq(block, checkpoint)) {
             peer_log(peer, "relayed a block that differs from the checkpoint at height %"PRIu32", blockHash: %s, "
-                     "expected: %s", block->height, u256_hex_encode(block->blockHash),
-                     u256_hex_encode(checkpoint->blockHash));
+                     "expected: %s", block->height, u256hex(block->blockHash), u256hex(checkpoint->blockHash));
             r = 0;
         }
     }
@@ -1315,8 +1226,8 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
     }
     else if (! prev) { // block is an orphan
         peer_log(peer, "relayed orphan block %s, previous %s, last block is %s, height %"PRIu32,
-                 u256_hex_encode(block->blockHash), u256_hex_encode(block->prevBlock),
-                 u256_hex_encode(manager->lastBlock->blockHash), manager->lastBlock->height);
+                 u256hex(block->blockHash), u256hex(block->prevBlock), u256hex(manager->lastBlock->blockHash),
+                 manager->lastBlock->height);
 
         if (block->timestamp + 7*24*60*60 < time(NULL)) { // ignore orphans older than one week ago
             BRMerkleBlockFree(block);
@@ -1393,9 +1304,9 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
         BRSetAdd(manager->orphans, block); // mark as orphan til we're caught up
         manager->lastOrphan = block;
     }
-    else if (block->height <= checkpoint_array[CHECKPOINT_COUNT - 1].height) { // fork is older than last checkpoint
+    else if (block->height <= manager->params->checkpoints[manager->params->checkpointsCount - 1].height) { // old fork
         peer_log(peer, "ignoring block on fork older than most recent checkpoint, block #%"PRIu32", hash: %s",
-                 block->height, u256_hex_encode(block->blockHash));
+                 block->height, u256hex(block->blockHash));
         BRMerkleBlockFree(block);
         block = NULL;
     }
@@ -1457,6 +1368,7 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
     BRMerkleBlock *saveBlocks[saveCount];
 
     for (i = 0, b = block; b && i < saveCount; i++) {
+        assert(b->height != BLOCK_UNKNOWN_HEIGHT); // verify all blocks to be saved are in the chain
         saveBlocks[i] = b;
         b = BRSetGet(manager->blocks, &b->prevBlock);
     }
@@ -1508,7 +1420,7 @@ static void _peerSetFeePerKb(void *info, uint64_t feePerKb)
 
     if (secondFeePerKb*3/2 > DEFAULT_FEE_PER_KB && secondFeePerKb*3/2 <= MAX_FEE_PER_KB &&
         secondFeePerKb*3/2 > BRWalletFeePerKb(manager->wallet)) {
-        peer_log(peer, "increasing feePerKb to %llu based on feefilter messages from peers", secondFeePerKb*3/2);
+        peer_log(peer, "increasing feePerKb to %"PRIu64" based on feefilter messages from peers", secondFeePerKb*3/2);
         BRWalletSetFeePerKb(manager->wallet, secondFeePerKb*3/2);
     }
 
@@ -1607,16 +1519,18 @@ static void _dummyThreadCleanup(void *info)
 }
 
 // returns a newly allocated BRPeerManager struct that must be freed by calling BRPeerManagerFree()
-BRPeerManager *BRPeerManagerNew(BRWallet *wallet, uint32_t earliestKeyTime, BRMerkleBlock *blocks[], size_t blocksCount,
-                                const BRPeer peers[], size_t peersCount)
+BRPeerManager *BRPeerManagerNew(const BRChainParams *params, BRWallet *wallet, uint32_t earliestKeyTime,
+                                BRMerkleBlock *blocks[], size_t blocksCount, const BRPeer peers[], size_t peersCount)
 {
     BRPeerManager *manager = calloc(1, sizeof(*manager));
     BRMerkleBlock orphan, *block = NULL;
 
     assert(manager != NULL);
+    assert(params != NULL);
     assert(wallet != NULL);
     assert(blocks != NULL || blocksCount == 0);
     assert(peers != NULL || peersCount == 0);
+    manager->params = params;
     manager->wallet = wallet;
     manager->earliestKeyTime = earliestKeyTime;
     manager->averageTxPerBlock = 1400;
@@ -1629,12 +1543,12 @@ BRPeerManager *BRPeerManagerNew(BRWallet *wallet, uint32_t earliestKeyTime, BRMe
     manager->orphans = BRSetNew(_BRPrevBlockHash, _BRPrevBlockEq, blocksCount); // orphans are indexed by prevBlock
     manager->checkpoints = BRSetNew(_BRBlockHeightHash, _BRBlockHeightEq, 100); // checkpoints are indexed by height
 
-    for (size_t i = 0; i < CHECKPOINT_COUNT; i++) {
+    for (size_t i = 0; i < manager->params->checkpointsCount; i++) {
         block = BRMerkleBlockNew();
-        block->height = checkpoint_array[i].height;
-        block->blockHash = UInt256Reverse(u256_hex_decode(checkpoint_array[i].hash));
-        block->timestamp = checkpoint_array[i].timestamp;
-        block->target = checkpoint_array[i].target;
+        block->height = manager->params->checkpoints[i].height;
+        block->blockHash = UInt256Reverse(manager->params->checkpoints[i].hash);
+        block->timestamp = manager->params->checkpoints[i].timestamp;
+        block->target = manager->params->checkpoints[i].target;
         BRSetAdd(manager->checkpoints, block);
         BRSetAdd(manager->blocks, block);
         if (i == 0 || block->timestamp + 7*24*60*60 < manager->earliestKeyTime) manager->lastBlock = block;
@@ -1712,16 +1626,22 @@ void BRPeerManagerSetFixedPeer(BRPeerManager *manager, UInt128 address, uint16_t
     pthread_mutex_unlock(&manager->lock);
 }
 
-// true if currently connected to at least one peer
-int BRPeerManagerIsConnected(BRPeerManager *manager)
+// current connect status
+BRPeerStatus BRPeerManagerConnectStatus(BRPeerManager *manager)
 {
-    int isConnected;
+    BRPeerStatus status = BRPeerStatusDisconnected;
 
     assert(manager != NULL);
     pthread_mutex_lock(&manager->lock);
-    isConnected = manager->isConnected;
+    if (manager->isConnected != 0) status = BRPeerStatusConnected;
+
+    for (size_t i = array_count(manager->connectedPeers); i > 0 && status == BRPeerStatusDisconnected; i--) {
+        if (BRPeerConnectStatus(manager->connectedPeers[i - 1]) == BRPeerStatusDisconnected) continue;
+        status = BRPeerStatusConnecting;
+    }
+
     pthread_mutex_unlock(&manager->lock);
-    return isConnected;
+    return status;
 }
 
 // connect to bitcoin peer-to-peer network (also call this whenever networkIsReachable() status changes)
@@ -1774,7 +1694,7 @@ void BRPeerManagerConnect(BRPeerManager *manager)
                 info = calloc(1, sizeof(*info));
                 assert(info != NULL);
                 info->manager = manager;
-                info->peer = BRPeerNew();
+                info->peer = BRPeerNew(manager->params->magicNumber);
                 *info->peer = peers[i];
                 array_rm(peers, i);
                 array_add(manager->connectedPeers, info->peer);
@@ -1835,9 +1755,9 @@ void BRPeerManagerRescan(BRPeerManager *manager)
 
     if (manager->isConnected) {
         // start the chain download from the most recent checkpoint that's at least a week older than earliestKeyTime
-        for (size_t i = CHECKPOINT_COUNT; i > 0; i--) {
-            if (i - 1 == 0 || checkpoint_array[i - 1].timestamp + 7*24*60*60 < manager->earliestKeyTime) {
-                UInt256 hash = UInt256Reverse(u256_hex_decode(checkpoint_array[i - 1].hash));
+        for (size_t i = manager->params->checkpointsCount; i > 0; i--) {
+            if (i - 1 == 0 || manager->params->checkpoints[i - 1].timestamp + 7*24*60*60 < manager->earliestKeyTime) {
+                UInt256 hash = UInt256Reverse(manager->params->checkpoints[i - 1].hash);
 
                 manager->lastBlock = BRSetGet(manager->blocks, &hash);
                 break;
@@ -1930,7 +1850,7 @@ size_t BRPeerManagerPeerCount(BRPeerManager *manager)
     pthread_mutex_lock(&manager->lock);
 
     for (size_t i = array_count(manager->connectedPeers); i > 0; i--) {
-        if (BRPeerConnectStatus(manager->connectedPeers[i - 1]) == BRPeerStatusConnected) count++;
+        if (BRPeerConnectStatus(manager->connectedPeers[i - 1]) != BRPeerStatusDisconnected) count++;
     }
 
     pthread_mutex_unlock(&manager->lock);
