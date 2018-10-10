@@ -52,6 +52,7 @@
 #define LOCAL_HOST         ((UInt128) { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 })
 #define CONNECT_TIMEOUT    3.0
 #define MESSAGE_TIMEOUT    10.0
+#define WITNESS_FLAG       0x40000000
 
 // the standard blockchain download protocol works as follows (for SPV mode):
 // - local peer sends getblocks
@@ -85,7 +86,10 @@ typedef enum {
     inv_undefined = 0,
     inv_tx = 1,
     inv_block = 2,
-    inv_filtered_block = 3
+    inv_filtered_block = 3,
+    inv_witness_block = inv_block | WITNESS_FLAG,
+    inv_witness_tx = inv_tx | WITNESS_FLAG,
+    inv_filtered_witness_block = inv_filtered_block | WITNESS_FLAG
 } inv_type;
 
 typedef struct {
@@ -533,10 +537,11 @@ static int _BRPeerAcceptGetdataMessage(BRPeer *peer, const uint8_t *msg, size_t 
             UInt256 hash = UInt256Get(&msg[off + sizeof(uint32_t)]);
             
             switch (type) {
+                case inv_witness_tx: // drop through
                 case inv_tx:
                     if (ctx->requestedTx) tx = ctx->requestedTx(ctx->info, hash);
 
-                    if (tx && BRTransactionSize(tx) < TX_MAX_SIZE) {
+                    if (tx && BRTransactionVSize(tx) < TX_MAX_SIZE) {
                         uint8_t buf[BRTransactionSerialize(tx, NULL, 0)];
                         size_t bufLen = BRTransactionSerialize(tx, buf, sizeof(buf));
                         char txHex[bufLen*2 + 1];
@@ -604,7 +609,10 @@ static int _BRPeerAcceptNotfoundMessage(BRPeer *peer, const uint8_t *msg, size_t
             hash = UInt256Get(&msg[off + sizeof(uint32_t)]);
             
             switch (type) {
+                case inv_witness_tx: // drop through
                 case inv_tx: array_add(txHashes, hash); break;
+                case inv_filtered_witness_block: // drop through
+                case inv_witness_block: // drop through
                 case inv_filtered_block: // drop through
                 case inv_block: array_add(blockHashes, hash); break;
                 default: break;
