@@ -1243,9 +1243,11 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
             BRPeerScheduleDisconnect(peer, PROTOCOL_TIMEOUT); // reschedule sync timeout
             manager->connectFailureCount = 0; // reset failure count once we know our initial request didn't timeout
         }
-
-        if ((block->height % BLOCK_DIFFICULTY_INTERVAL) == 0) saveCount = 1; // save transition block immediately
-
+        
+        if ((block->height % BLOCK_DIFFICULTY_INTERVAL) == 0 && block->height + 100 < manager->estimatedHeight) {
+            saveCount = 1; // save transition blocks immediately
+        }
+        
         if (block->height == manager->estimatedHeight) { // chain download is complete
             saveCount = (block->height % BLOCK_DIFFICULTY_INTERVAL) + BLOCK_DIFFICULTY_INTERVAL + 1;
             _BRPeerManagerLoadMempools(manager);
