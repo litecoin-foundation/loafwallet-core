@@ -234,7 +234,7 @@ size_t BRKeyBIP38Key(BRKey *key, char *bip38Key, size_t bip38KeyLen, const char 
     assert(passphrase != NULL);
    
     if (key->compressed) flag |= BIP38_COMPRESSED_FLAG;
-    BRKeyAddress(key, address.s, sizeof(address));
+    BRKeyLegacyAddr(key, address.s, sizeof(address));
     BRSHA256_2(&hash, address.s, strlen(address.s));
     salt = hash.u32[0];
 
