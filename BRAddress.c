@@ -368,9 +368,9 @@ size_t BRAddressFromHash160(char *addr, size_t addrLen, const void *md20)
     
     assert(md20 != NULL);
     memcpy(&script[2], md20, 20);
-    r = BRBech32Encode(a, "bc", script);
+    r = BRBech32Encode(a, "ltc", script);
 #if BITCOIN_TESTNET
-    r = BRBech32Encode(a, "tb", script);
+    r = BRBech32Encode(a, "tltc", script);
 #endif
     if (addr && r <= addrLen) memcpy(addr, a, r);
     return (! addr || r <= addrLen) ? r : 0;
