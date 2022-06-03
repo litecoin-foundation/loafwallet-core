@@ -51,15 +51,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+ 
 #define SERVICES_NODE_NETWORK 0x01 // services value indicating a node carries full blocks, not just headers
 #define SERVICES_NODE_BLOOM   0x04 // BIP111: https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki
 #define SERIVCES_NODE_WITNESS 0x08 // BIP144: https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki
 #define SERVICES_NODE_BCASH   0x20 // https://github.com/Bitcoin-UAHF/spec/blob/master/uahf-technical-spec.md
     
 #define BR_VERSION "2.1"
-#define USER_AGENT "/loaf:" BR_VERSION "/"
-
+#define USER_AGENT "/loaf-android:" BR_VERSION "/" 
+	
 // explanation of message types at: https://en.bitcoin.it/wiki/Protocol_specification
 #define MSG_VERSION     "version"
 #define MSG_VERACK      "verack"

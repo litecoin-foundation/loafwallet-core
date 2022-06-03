@@ -46,6 +46,7 @@
 
 #define genesis_block_hash(params) UInt256Reverse((params)->checkpoints[0].hash)
 
+
 typedef struct {
     BRPeerManager *manager;
     const char *hostname;
