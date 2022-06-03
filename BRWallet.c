@@ -841,6 +841,7 @@ void BRWalletRemoveTransaction(BRWallet *wallet, UInt256 txHash)
 
             if (wallet->balanceChanged) wallet->balanceChanged(wallet->callbackInfo, wallet->balance);
             if (wallet->txDeleted) wallet->txDeleted(wallet->callbackInfo, txHash, notifyUser, recommendRescan);
+            BRTransactionFree(tx);
         }
         
         array_free(hashes);

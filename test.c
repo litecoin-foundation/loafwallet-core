@@ -36,8 +36,7 @@
 #include "BRBIP39WordsEn.h"
 #include "BRPeer.h"
 #include "BRPeerManager.h"
-#include "BRChainParams.h"
-#include "bcash/BRBCashParams.h"
+#include "BRChainParams.h" 
 #include "BRPaymentProtocol.h"
 #include "BRInt.h"
 #include "BRArray.h"
@@ -62,8 +61,8 @@
 #define _va_first(first, ...) first
 #define _va_rest(first, ...) __VA_ARGS__
 #endif
-
-#if BITCOIN_TESTNET
+ 
+#if LITECOIN_TESTNET
 #define BR_CHAIN_PARAMS BRTestNetParams
 #else
 #define BR_CHAIN_PARAMS BRMainNetParams
@@ -236,7 +235,6 @@ int BRBase58Tests()
     size_t len2 = BRBase58Decode(buf2, sizeof(buf2), "");
 
     if (len2 != 0) r = 0, fprintf(stderr, "***FAILED*** %s: BRBase58Decode() test 2\n", __func__);
-
     s = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
     uint8_t buf3[BRBase58Decode(NULL, 0, s)];
@@ -1545,7 +1543,7 @@ int BRAddressTests()
         r = 0, fprintf(stderr, "\n***FAILED*** %s: BRAddressFromScriptPubKey() test 1", __func__);
 
     // TODO: test BRAddressFromScriptSig()
-
+	
     BRAddress addr3;
     char script2[] = "\0\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
     if (! BRAddressFromScriptPubKey(addr3.s, sizeof(addr3), (uint8_t *)script2, sizeof(script2)))
@@ -1753,8 +1751,9 @@ int BRBIP32SequenceTests()
     BRBIP39DeriveKey(dk.u8, "inhale praise target steak garlic cricket paper better evil almost sadness crawl city "
                      "banner amused fringe fox insect roast aunt prefer hollow basic ladder", NULL);
     BRBIP32BitIDKey(&key, dk.u8, sizeof(dk), 0, "http://bitid.bitcoin.blue/callback");
-    BRKeyLegacyAddr(&key, addr.s, sizeof(addr));
-#if BITCOIN_TESTNET
+
+    BRKeyAddress(&key, addr.s, sizeof(addr));
+#if LITECOIN_TESTNET
     if (strncmp(addr.s, "mxZ2Dn9vcyNeKh9DNHZw6d6NrxeYCVNjc2", sizeof(addr)) != 0)
         r = 0, fprintf(stderr, "***FAILED*** %s: BRBIP32BitIDKey() test\n", __func__);
 #else
@@ -1797,18 +1796,18 @@ static int BRTransactionEqual (BRTransaction *tx1, BRTransaction *tx2) {
         || tx1->lockTime != tx2->lockTime
         || tx1->blockHeight != tx2->blockHeight
         || tx1->timestamp != tx2->timestamp
-        || tx1->inCount != tx2->inCount
-        || tx1->outCount != tx2->outCount)
+        || array_count(tx1->inputs) != array_count(tx2->inputs)
+        || array_count(tx1->outputs) != array_count(tx2->outputs))
         return 0;
 
     // Inputs
     if (NULL != tx1->inputs)
-        for (int i = 0; i < tx1->inCount; i++)
+        for (int i = 0; i < array_count(tx1->inputs); i++)
             if (!BRTxInputEqual(&tx1->inputs[i], &tx2->inputs[i]))
                 return 0;
     // Outputs
     if (NULL != tx1->outputs)
-        for (int i = 0; i < tx1->outCount; i++)
+        for (int i = 0; i < array_count(tx1->outputs); i++)
             if (!BRTxOutputEqual(&tx1->outputs[i], &tx2->outputs[i]))
                 return 0;
 
@@ -1837,7 +1836,6 @@ int BRTransactionTests()
 
     uint8_t buf[BRTransactionSerialize(tx, NULL, 0)]; // test serializing/parsing unsigned tx
     size_t len = BRTransactionSerialize(tx, buf, sizeof(buf));
-
     if (len == 0) r = 0, fprintf(stderr, "\n***FAILED*** %s: BRTransactionSerialize() test 0", __func__);
     BRTransactionFree(tx);
     tx = BRTransactionParse(buf, len);
@@ -2033,18 +2031,21 @@ int BRTransactionTests()
     BRTransactionAddOutput(src, 1000000, script, scriptLen);
 
     BRTransaction *tgt = BRTransactionCopy(src);
-    if (! BRTransactionEqual(tgt, src))
+
+    if (!BRTransactionEqual(tgt, src))
         r = 0, fprintf(stderr, "\n***FAILED*** %s: BRTransactionCopy() test 1", __func__);
 
     tgt->blockHeight++;
     if (BRTransactionEqual(tgt, src)) // fail if equal
         r = 0, fprintf(stderr, "\n***FAILED*** %s: BRTransactionCopy() test 2", __func__);
+
     BRTransactionFree(tgt);
     BRTransactionFree(src);
 
     src = BRTransactionParse(buf4, len4);
     tgt = BRTransactionCopy(src);
-    if (! BRTransactionEqual(tgt, src))
+
+    if (!BRTransactionEqual(tgt, src))
         r = 0, fprintf(stderr, "\n***FAILED*** %s: BRTransactionCopy() test 3", __func__);
     BRTransactionFree(tgt);
     BRTransactionFree(src);

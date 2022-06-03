@@ -88,7 +88,7 @@ typedef struct {
 
 #define BR_ADDRESS_NONE ((const BRAddress) {\
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"\
-    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" })
+    "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" }) 
 
 // writes the bitcoin address for a scriptPubKey to addr
 // returns the number of bytes written, or addrLen needed if addr is NULL
@@ -105,7 +105,7 @@ size_t BRAddressFromWitness(char *addr, size_t addrLen, const uint8_t *witness, 
 // writes the bech32 pay-to-witness-pubkey-hash address for a hash160 to addr
 // returns the number of bytes written, or addrLen needed if addr is NULL
 size_t BRAddressFromHash160(char *addr, size_t addrLen, const void *md20);
-
+ 
 // writes the scriptPubKey for addr to script
 // returns the number of bytes written, or scriptLen needed if script is NULL
 size_t BRAddressScriptPubKey(uint8_t *script, size_t scriptLen, const char *addr);
