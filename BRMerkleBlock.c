@@ -334,14 +334,14 @@ int BRMerkleBlockVerifyDifficulty(const BRMerkleBlock *block, const BRMerkleBloc
     
     if (! previous || !UInt256Eq(block->prevBlock, previous->blockHash) || block->height != previous->height + 1) r = 0;
     if (r && (block->height % BLOCK_DIFFICULTY_INTERVAL) == 0 && transitionTime == 0) r = 0;
-        
+
     // if (r && (block->height % BLOCK_DIFFICULTY_INTERVAL) == 0) {
     //     // target is in "compact" format, where the most significant byte is the size of resulting value in bytes, next
     //     // bit is the sign, and the remaining 23bits is the value after having been right shifted by (size - 3)*8 bits
     //     static const uint32_t maxsize = MAX_PROOF_OF_WORK >> 24, maxtarget = MAX_PROOF_OF_WORK & 0x00ffffff;
     //     int timespan = (int)((int64_t)previous->timestamp - (int64_t)transitionTime), size = previous->target >> 24;
     //     uint64_t target = previous->target & 0x00ffffff;
-    
+
     //     // limit difficulty transition to -75% or +400%
     //     if (timespan < TARGET_TIMESPAN/4) timespan = TARGET_TIMESPAN/4;
     //     if (timespan > TARGET_TIMESPAN*4) timespan = TARGET_TIMESPAN*4;
