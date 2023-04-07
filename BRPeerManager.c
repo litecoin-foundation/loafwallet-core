@@ -1207,6 +1207,10 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
             manager->fpRate > BLOOM_DEFAULT_FALSEPOSITIVE_RATE*10.0) {
             peer_log(peer, "bloom filter false positive rate %f too high after %"PRIu32" blocks, disconnecting...",
                      manager->fpRate, manager->lastBlock->height + 1 - manager->filterUpdateHeight);
+
+            //Resets the fpRate to the reduced fpRate to allow further connection
+            manager->fpRate = BLOOM_REDUCED_FALSEPOSITIVE_RATE;
+
             BRPeerDisconnect(peer);
         }
         else if (manager->lastBlock->height + 500 < BRPeerLastBlock(peer) &&
