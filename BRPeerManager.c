@@ -1195,10 +1195,12 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
 
         // moving average number of tx-per-block
         manager->averageTxPerBlock = manager->averageTxPerBlock*0.999 + block->totalTx*0.001;
+        peer_log(peer, "user preferred fpRate: %f", manager->fpRate);
 
         // 1% low pass filter, also weights each block by total transactions, compared to the avarage
         manager->fpRate = manager->fpRate*(1.0 - 0.01*block->totalTx/manager->averageTxPerBlock) +
                           0.01*fpCount/manager->averageTxPerBlock;
+        peer_log(peer, "adjusted preferred fpRate: %f", manager->fpRate);
 
         // false positive rate sanity check
         if (BRPeerConnectStatus(peer) == BRPeerStatusConnected &&
