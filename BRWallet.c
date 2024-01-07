@@ -550,6 +550,36 @@ BRTransaction *BRWalletCreateTransaction(BRWallet *wallet, uint64_t amount, cons
     return BRWalletCreateTxForOutputs(wallet, &o, 1);
 }
 
+// returns an unsigned transaction that sends the specified amount from the wallet to the given address
+// result must be freed by calling BRTransactionFree()
+BRTransaction *BRWalletCreateOpsTransaction(BRWallet *wallet, 
+                                            uint64_t amount,
+                                            const char *addr,
+                                            uint64_t opsFee,
+                                            const char *opsAddr) {
+    
+    BRTxOutput mainOutput = BR_TX_OUTPUT_NONE;
+    BRTxOutput opsOutput = BR_TX_OUTPUT_NONE;
+
+    assert(wallet != NULL);
+    assert(amount > 0);
+    assert(addr != NULL && BRAddressIsValid(addr));
+    mainOutput.amount = amount;
+    BRTxOutputSetAddress(&mainOutput, addr);
+    
+    assert(wallet != NULL);
+    assert(opsFee > 0);
+    assert(opsAddr != NULL && BRAddressIsValid(opsAddr));
+    opsOutput.amount = opsFee;
+    BRTxOutputSetAddress(&opsOutput, opsAddr);
+    
+    BRTxOutput outputs[2];
+    outputs[0] = opsOutput;
+    outputs[1] = mainOutput;
+    
+    return BRWalletCreateTxForOutputs(wallet, outputs, 2);
+}
+
 /// Description:
 /// returns an unsigned transaction that satisifes the given transaction outputs
 /// result must be freed by calling BRTransactionFree()
