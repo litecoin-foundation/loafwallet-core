@@ -161,10 +161,12 @@ static void _BRPeerDidConnect(BRPeer *peer)
     BRPeerContext *ctx = (BRPeerContext *)peer;
     
     if (ctx->status == BRPeerStatusConnecting && ctx->sentVerack && ctx->gotVerack) {
-        peer_log(peer, "handshake completed");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "handshake completed");
         ctx->disconnectTime = DBL_MAX;
         ctx->status = BRPeerStatusConnected;
-        peer_log(peer, "connected with lastblock: %"PRIu32, ctx->lastblock);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "connected with lastblock: %"PRIu32, ctx->lastblock);
         if (ctx->connected) ctx->connected(ctx->info);
     }
 }
@@ -179,7 +181,8 @@ static int _BRPeerAcceptVersionMessage(BRPeer *peer, const uint8_t *msg, size_t 
     int r = 1;
     
     if (85 > msgLen) {
-        peer_log(peer, "malformed version message, length is %zu, should be >= 85", msgLen);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed version message, length is %zu, should be >= 85", msgLen);
         r = 0;
     }
     else {
@@ -207,12 +210,14 @@ static int _BRPeerAcceptVersionMessage(BRPeer *peer, const uint8_t *msg, size_t 
         off += len;
 
         if (off + strLen + sizeof(uint32_t) > msgLen) {
-            peer_log(peer, "malformed version message, length is %zu, should be %zu", msgLen,
-                     off + strLen + sizeof(uint32_t));
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer,peer_log(peer, "malformed version message, length is %zu, should be %zu", msgLen,
+            //         off + strLen + sizeof(uint32_t));
             r = 0;
         }
         else if (ctx->version < MIN_PROTO_VERSION) {
-            peer_log(peer, "protocol version %"PRIu32" not supported", ctx->version);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "protocol version %"PRIu32" not supported", ctx->version);
             r = 0;
         }
         else {
@@ -222,8 +227,9 @@ static int _BRPeerAcceptVersionMessage(BRPeer *peer, const uint8_t *msg, size_t 
             off += strLen;
             ctx->lastblock = UInt32GetLE(&msg[off]);
             off += sizeof(uint32_t);
-            peer_log(peer, "got version %"PRIu32", services %"PRIx64", useragent:\"%s\"", ctx->version, peer->services,
-                     ctx->useragent);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "got version %"PRIu32", services %"PRIx64", useragent:\"%s\"", ctx->version, peer->services,
+            //        ctx->useragent);
             BRPeerSendVerackMessage(peer);
         }
     }
@@ -238,13 +244,15 @@ static int _BRPeerAcceptVerackMessage(BRPeer *peer, const uint8_t *msg, size_t m
     int r = 1;
     
     if (ctx->gotVerack) {
-        peer_log(peer, "got unexpected verack");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer,peer_log(peer, "got unexpected verack");
     }
     else {
         gettimeofday(&tv, NULL);
         ctx->pingTime = tv.tv_sec + (double)tv.tv_usec/1000000 - ctx->startTime; // use verack time as initial ping time
         ctx->startTime = 0;
-        peer_log(peer, "got verack in %fs", ctx->pingTime);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer,peer_log(peer, "got verack in %fs", ctx->pingTime);
         ctx->gotVerack = 1;
         _BRPeerDidConnect(peer);
     }
@@ -260,19 +268,22 @@ static int _BRPeerAcceptAddrMessage(BRPeer *peer, const uint8_t *msg, size_t msg
     int r = 1;
     
     if (off == 0 || off + count*30 > msgLen) {
-        peer_log(peer, "malformed addr message, length is %zu, should be %zu for %zu address(es)", msgLen,
-                 BRVarIntSize(count) + 30*count, count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed addr message, length is %zu, should be %zu for %zu address(es)", msgLen,
+        //          BRVarIntSize(count) + 30*count, count);
         r = 0;
     }
     else if (count > 1000) {
-        peer_log(peer, "dropping addr message, %zu is too many addresses, max is 1000", count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "dropping addr message, %zu is too many addresses, max is 1000", count);
     }
     else if (ctx->sentGetaddr) { // simple anti-tarpitting tactic, don't accept unsolicited addresses
         BRPeer peers[count], p;
         size_t peersCount = 0;
         time_t now = time(NULL);
         
-        peer_log(peer, "got addr with %zu address(es)", count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got addr with %zu address(es)", count);
 
         for (size_t i = 0; i < count; i++) {
             p.timestamp = UInt32GetLE(&msg[off]);
@@ -306,19 +317,22 @@ static int _BRPeerAcceptInvMessage(BRPeer *peer, const uint8_t *msg, size_t msgL
     int r = 1;
     
     if (off == 0 || off + count*36 > msgLen) {
-        peer_log(peer, "malformed inv message, length is %zu, should be %zu for %zu item(s)", msgLen,
-                 BRVarIntSize(count) + 36*count, count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed inv message, length is %zu, should be %zu for %zu item(s)", msgLen,
+        //          BRVarIntSize(count) + 36*count, count);
         r = 0;
     }
     else if (count > MAX_GETDATA_HASHES) {
-        peer_log(peer, "dropping inv message, %zu is too many items, max is %d", count, MAX_GETDATA_HASHES);
+        
+         peer_log(peer, "dropping inv message, %zu is too many items, max is %d", count, MAX_GETDATA_HASHES);
     }
     else {
         inv_type type;
         const uint8_t *transactions[count], *blocks[count];
         size_t i, j, txCount = 0, blockCount = 0;
         
-        peer_log(peer, "got inv with %zu item(s)", count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got inv with %zu item(s)", count);
 
         for (i = 0; i < count; i++) {
             type = UInt32GetLE(&msg[off]);
@@ -333,16 +347,19 @@ static int _BRPeerAcceptInvMessage(BRPeer *peer, const uint8_t *msg, size_t msgL
         }
 
         if (txCount > 0 && ! ctx->sentFilter && ! ctx->sentMempool && ! ctx->sentGetblocks) {
-            peer_log(peer, "got inv message before loading a filter");
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "got inv message before loading a filter");
             r = 0;
         }
         else if (txCount > 10000) { // sanity check
-            peer_log(peer, "too many transactions, disconnecting");
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "too many transactions, disconnecting");
             r = 0;
         }
         else if (ctx->currentBlockHeight > 0 && blockCount > 2 && blockCount < 500 &&
                  ctx->currentBlockHeight + array_count(ctx->knownBlockHashes) + blockCount < ctx->lastblock) {
-            peer_log(peer, "non-standard inv, %zu is fewer block hash(es) than expected", blockCount);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "non-standard inv, %zu is fewer block hash(es) than expected", blockCount);
             r = 0;
         }
         else {
@@ -384,7 +401,8 @@ static int _BRPeerAcceptInvMessage(BRPeer *peer, const uint8_t *msg, size_t msgL
             }
             
             if (txCount > 0 && ctx->mempoolCallback) {
-                peer_log(peer, "got initial mempool response");
+                // DEV Uncomment to view logs. Verbose
+                // peer_log(peer, "got initial mempool response");
                 BRPeerSendPing(peer, ctx->mempoolInfo, ctx->mempoolCallback);
                 ctx->mempoolCallback = NULL;
                 ctx->mempoolTime = DBL_MAX;
@@ -403,11 +421,13 @@ static int _BRPeerAcceptTxMessage(BRPeer *peer, const uint8_t *msg, size_t msgLe
     int r = 1;
 
     if (! tx) {
-        peer_log(peer, "malformed tx message with length: %zu", msgLen);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed tx message with length: %zu", msgLen);
         r = 0;
     }
     else if (! ctx->sentFilter && ! ctx->sentGetdata) {
-        peer_log(peer, "got tx message before loading filter");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got tx message before loading filter");
         BRTransactionFree(tx);
         r = 0;
     }
@@ -447,12 +467,14 @@ static int _BRPeerAcceptHeadersMessage(BRPeer *peer, const uint8_t *msg, size_t 
     int r = 1;
 
     if (off == 0 || off + 81*count > msgLen) {
-        peer_log(peer, "malformed headers message, length is %zu, should be %zu for %zu header(s)", msgLen,
-                 BRVarIntSize(count) + 81*count, count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed headers message, length is %zu, should be %zu for %zu header(s)", msgLen,
+        //          BRVarIntSize(count) + 81*count, count);
         r = 0;
     }
     else {
-        peer_log(peer, "got %zu header(s)", count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got %zu header(s)", count);
     
         // To improve chain download performance, if this message contains 2000 headers then request the next 2000
         // headers immediately, and switch to requesting blocks when we receive a header newer than earliestKeyTime
@@ -483,7 +505,8 @@ static int _BRPeerAcceptHeadersMessage(BRPeer *peer, const uint8_t *msg, size_t 
                 BRMerkleBlock *block = BRMerkleBlockParse(&msg[off + 81*i], 81);
                 
                 if (! BRMerkleBlockIsValid(block, (uint32_t)now)) {
-                    peer_log(peer, "invalid block header: %s", u256hex(block->blockHash));
+                    // DEV Uncomment to view logs. Verbose
+                    // peer_log(peer, "invalid block header: %s", u256hex(block->blockHash));
                     BRMerkleBlockFree(block);
                     r = 0;
                 }
@@ -494,7 +517,8 @@ static int _BRPeerAcceptHeadersMessage(BRPeer *peer, const uint8_t *msg, size_t 
             }
         }
         else {
-            peer_log(peer, "non-standard headers message, %zu is fewer header(s) than expected", count);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "non-standard headers message, %zu is fewer header(s) than expected", count);
             r = 0;
         }
     }
@@ -504,7 +528,8 @@ static int _BRPeerAcceptHeadersMessage(BRPeer *peer, const uint8_t *msg, size_t 
 
 static int _BRPeerAcceptGetaddrMessage(BRPeer *peer, const uint8_t *msg, size_t msgLen)
 {
-    peer_log(peer, "got getaddr");
+    // DEV Uncomment to view logs. Verbose
+    // peer_log(peer, "got getaddr");
     BRPeerSendAddr(peer);
     return 1;
 }
@@ -516,8 +541,9 @@ static int _BRPeerAcceptGetdataMessage(BRPeer *peer, const uint8_t *msg, size_t 
     int r = 1;
     
     if (off == 0 || off + 36*count > msgLen) {
-        peer_log(peer, "malformed getdata message, length is %zu, should %zu for %zu item(s)", msgLen,
-                 BRVarIntSize(count) + 36*count, count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed getdata message, length is %zu, should %zu for %zu item(s)", msgLen,
+        // BRVarIntSize(count) + 36*count, count);
         r = 0;
     }
     else if (count > MAX_GETDATA_HASHES) {
@@ -527,7 +553,8 @@ static int _BRPeerAcceptGetdataMessage(BRPeer *peer, const uint8_t *msg, size_t 
         struct inv_item { uint8_t item[36]; } *notfound = NULL;
         BRTransaction *tx = NULL;
         
-        peer_log(peer, "got getdata with %zu item(s)", count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got getdata with %zu item(s)", count);
         
         for (size_t i = 0; i < count; i++) {
             inv_type type = UInt32GetLE(&msg[off]);
@@ -545,8 +572,8 @@ static int _BRPeerAcceptGetdataMessage(BRPeer *peer, const uint8_t *msg, size_t 
                         for (size_t j = 0; j < bufLen; j++) {
                             sprintf(&txHex[j*2], "%02x", buf[j]);
                         }
-                        
-                        peer_log(peer, "publishing tx: %s", txHex);
+                        // DEV Uncomment to view logs. Verbose
+                        // peer_log(peer, "publishing tx: %s", txHex);
                         BRPeerSendMessage(peer, buf, bufLen, MSG_TX);
                         break;
                     }
@@ -585,8 +612,9 @@ static int _BRPeerAcceptNotfoundMessage(BRPeer *peer, const uint8_t *msg, size_t
     int r = 1;
 
     if (off == 0 || off + 36*count > msgLen) {
-        peer_log(peer, "malformed notfound message, length is %zu, should be %zu for %zu item(s)", msgLen,
-                 BRVarIntSize(count) + 36*count, count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed notfound message, length is %zu, should be %zu for %zu item(s)", msgLen,
+        //          BRVarIntSize(count) + 36*count, count);
         r = 0;
     }
     else if (count > MAX_GETDATA_HASHES) {
@@ -595,8 +623,8 @@ static int _BRPeerAcceptNotfoundMessage(BRPeer *peer, const uint8_t *msg, size_t
     else {
         inv_type type;
         UInt256 *txHashes, *blockHashes, hash;
-        
-        peer_log(peer, "got notfound with %zu item(s)", count);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got notfound with %zu item(s)", count);
         array_new(txHashes, 1);
         array_new(blockHashes, 1);
         
@@ -630,11 +658,13 @@ static int _BRPeerAcceptPingMessage(BRPeer *peer, const uint8_t *msg, size_t msg
     int r = 1;
     
     if (sizeof(uint64_t) > msgLen) {
-        peer_log(peer, "malformed ping message, length is %zu, should be %zu", msgLen, sizeof(uint64_t));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed ping message, length is %zu, should be %zu", msgLen, sizeof(uint64_t));
         r = 0;
     }
     else {
-        peer_log(peer, "got ping");
+        // DEV Uncomment to view logs. Verbose
+        //peer_log(peer, "got ping");
         BRPeerSendMessage(peer, msg, msgLen, MSG_PONG);
     }
 
@@ -649,15 +679,18 @@ static int _BRPeerAcceptPongMessage(BRPeer *peer, const uint8_t *msg, size_t msg
     int r = 1;
     
     if (sizeof(uint64_t) > msgLen) {
-        peer_log(peer, "malformed pong message, length is %zu, should be %zu", msgLen, sizeof(uint64_t));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed pong message, length is %zu, should be %zu", msgLen, sizeof(uint64_t));
         r = 0;
     }
     else if (UInt64GetLE(msg) != ctx->nonce) {
-        peer_log(peer, "pong message has wrong nonce: %"PRIu64", expected: %"PRIu64, UInt64GetLE(msg), ctx->nonce);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "pong message has wrong nonce: %"PRIu64", expected: %"PRIu64, UInt64GetLE(msg), ctx->nonce);
         r = 0;
     }
     else if (array_count(ctx->pongCallback) == 0) {
-        peer_log(peer, "got unexpected pong");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got unexpected pong");
         r = 0;
     }
     else {
@@ -668,9 +701,11 @@ static int _BRPeerAcceptPongMessage(BRPeer *peer, const uint8_t *msg, size_t msg
             // 50% low pass filter on current ping time
             ctx->pingTime = ctx->pingTime*0.5 + pingTime*0.5;
             ctx->startTime = 0;
-            peer_log(peer, "got pong in %fs", pingTime);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "got pong in %fs", pingTime);
         }
-        else peer_log(peer, "got pong");
+        // DEV Uncomment to view logs. Verbose
+        // else peer_log(peer, "got pong");
 
         if (array_count(ctx->pongCallback) > 0) {
             void (*pongCallback)(void *, int) = ctx->pongCallback[0];
@@ -695,17 +730,20 @@ static int _BRPeerAcceptMerkleblockMessage(BRPeer *peer, const uint8_t *msg, siz
     int r = 1;
   
     if (! block) {
-        peer_log(peer, "malformed merkleblock message with length: %zu", msgLen);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed merkleblock message with length: %zu", msgLen);
         r = 0;
     }
     else if (! BRMerkleBlockIsValid(block, (uint32_t)time(NULL))) {
-        peer_log(peer, "invalid merkleblock: %s", u256hex(block->blockHash));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "invalid merkleblock: %s", u256hex(block->blockHash));
         BRMerkleBlockFree(block);
         block = NULL;
         r = 0;
     }
     else if (! ctx->sentFilter && ! ctx->sentGetdata) {
-        peer_log(peer, "got merkleblock message before loading a filter");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got merkleblock message before loading a filter");
         BRMerkleBlockFree(block);
         block = NULL;
         r = 0;
@@ -747,8 +785,9 @@ static int _BRPeerAcceptRejectMessage(BRPeer *peer, const uint8_t *msg, size_t m
     int r = 1;
     
     if (off + strLen + sizeof(uint8_t) > msgLen) {
-        peer_log(peer, "malformed reject message, length is %zu, should be >= %zu", msgLen,
-                 off + strLen + sizeof(uint8_t));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed reject message, length is %zu, should be >= %zu", msgLen,
+        //          off + strLen + sizeof(uint8_t));
         r = 0;
     }
     else {
@@ -765,7 +804,8 @@ static int _BRPeerAcceptRejectMessage(BRPeer *peer, const uint8_t *msg, size_t m
         if (strncmp(type, MSG_TX, sizeof(type)) == 0) hashLen = sizeof(UInt256);
         
         if (off + strLen + hashLen > msgLen) {
-            peer_log(peer, "malformed reject message, length is %zu, should be >= %zu", msgLen, off + strLen + hashLen);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "malformed reject message, length is %zu, should be >= %zu", msgLen, off + strLen + hashLen);
             r = 0;
         }
         else {
@@ -779,10 +819,12 @@ static int _BRPeerAcceptRejectMessage(BRPeer *peer, const uint8_t *msg, size_t m
             off += hashLen;
 
             if (! UInt256IsZero(txHash)) {
-                peer_log(peer, "rejected %s code: 0x%x reason: \"%s\" txid: %s", type, code, reason, u256hex(txHash));
+                // DEV Uncomment to view logs. Verbose
+                // peer_log(peer, "rejected %s code: 0x%x reason: \"%s\" txid: %s", type, code, reason, u256hex(txHash));
                 if (ctx->rejectedTx) ctx->rejectedTx(ctx->info, txHash, code);
             }
-            else peer_log(peer, "rejected %s code: 0x%x reason: \"%s\"", type, code, reason);
+            // DEV Uncomment to view logs. Verbose
+            // else peer_log(peer, "rejected %s code: 0x%x reason: \"%s\"", type, code, reason);
         }
     }
 
@@ -796,12 +838,14 @@ static int _BRPeerAcceptFeeFilterMessage(BRPeer *peer, const uint8_t *msg, size_
     int r = 1;
     
     if (sizeof(uint64_t) > msgLen) {
-        peer_log(peer, "malformed feefilter message, length is %zu, should be >= %zu", msgLen, sizeof(uint64_t));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "malformed feefilter message, length is %zu, should be >= %zu", msgLen, sizeof(uint64_t));
         r = 0;
     }
     else {
         ctx->feePerKb = UInt64GetLE(msg);
-        peer_log(peer, "got feefilter with rate %"PRIu64, ctx->feePerKb);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "got feefilter with rate %"PRIu64, ctx->feePerKb);
         if (ctx->setFeePerKb) ctx->setFeePerKb(ctx->info, ctx->feePerKb);
     }
     
@@ -814,8 +858,9 @@ static int _BRPeerAcceptMessage(BRPeer *peer, const uint8_t *msg, size_t msgLen,
     int r = 1;
     
     if (ctx->currentBlock && strncmp(MSG_TX, type, 12) != 0) { // if we receive a non-tx message, merkleblock is done
-        peer_log(peer, "incomplete merkleblock %s, expected %zu more tx, got %s", u256hex(ctx->currentBlock->blockHash),
-                 array_count(ctx->currentBlockTxHashes), type);
+        // DEV Uncomment to view logs. Verbose 
+        // peer_log(peer, "incomplete merkleblock %s, expected %zu more tx, got %s", u256hex(ctx->currentBlock->blockHash),
+        //          array_count(ctx->currentBlockTxHashes), type);
         array_clear(ctx->currentBlockTxHashes);
         ctx->currentBlock = NULL;
         r = 0;
@@ -949,7 +994,8 @@ static void *_peerThreadRoutine(void *arg)
                 if (! error && time >= ctx->disconnectTime) error = ETIMEDOUT;
 
                 if (! error && time >= ctx->mempoolTime) {
-                    peer_log(peer, "done waiting for mempool response");
+                    // DEV Uncomment to view logs. Verbose
+                    // peer_log(peer, "done waiting for mempool response");
                     BRPeerSendPing(peer, ctx->mempoolInfo, ctx->mempoolCallback);
                     ctx->mempoolCallback = NULL;
                     ctx->mempoolTime = DBL_MAX;
@@ -1144,14 +1190,17 @@ void BRPeerConnect(BRPeer *peer)
             ctx->waitingForNetwork = 1;
         }
         else {
-            peer_log(peer, "connecting");
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "connecting");
             ctx->waitingForNetwork = 0;
             gettimeofday(&tv, NULL);
             ctx->disconnectTime = tv.tv_sec + (double)tv.tv_usec/1000000 + CONNECT_TIMEOUT;
 
             if (pthread_attr_init(&attr) != 0) {
                 error = ENOMEM;
-                peer_log(peer, "error creating thread");
+                
+                // DEV Uncomment to view logs. Verbose
+                // peer_log(peer, "error creating thread");
                 ctx->status = BRPeerStatusDisconnected;
                 //if (ctx->disconnected) ctx->disconnected(ctx->info, error);
             }
@@ -1370,7 +1419,8 @@ void BRPeerSendMempool(BRPeer *peer, const UInt256 knownTxHashes[], size_t known
         BRPeerSendMessage(peer, NULL, 0, MSG_MEMPOOL);
     }
     else {
-        peer_log(peer, "mempool request already sent");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "mempool request already sent");
         if (completionCallback) completionCallback(info, 0);
     }
 }
@@ -1394,8 +1444,9 @@ void BRPeerSendGetheaders(BRPeer *peer, const UInt256 locators[], size_t locator
     off += sizeof(UInt256);
 
     if (locatorsCount > 0) {
-        peer_log(peer, "calling getheaders with %zu locators: [%s,%s %s]", locatorsCount, u256hex(locators[0]),
-                 (locatorsCount > 2 ? " ...," : ""), (locatorsCount > 1 ? u256hex(locators[locatorsCount - 1]) : ""));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "calling getheaders with %zu locators: [%s,%s %s]", locatorsCount, u256hex(locators[0]),
+        //          (locatorsCount > 2 ? " ...," : ""), (locatorsCount > 1 ? u256hex(locators[locatorsCount - 1]) : ""));
         BRPeerSendMessage(peer, msg, off, MSG_GETHEADERS);
     }
 }
@@ -1419,8 +1470,9 @@ void BRPeerSendGetblocks(BRPeer *peer, const UInt256 locators[], size_t locators
     off += sizeof(UInt256);
     
     if (locatorsCount > 0) {
-        peer_log(peer, "calling getblocks with %zu locators: [%s,%s %s]", locatorsCount, u256hex(locators[0]),
-                 (locatorsCount > 2 ? " ...," : ""), (locatorsCount > 1 ? u256hex(locators[locatorsCount - 1]) : ""));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "calling getblocks with %zu locators: [%s,%s %s]", locatorsCount, u256hex(locators[0]),
+        //          (locatorsCount > 2 ? " ...," : ""), (locatorsCount > 1 ? u256hex(locators[locatorsCount - 1]) : ""));
         BRPeerSendMessage(peer, msg, off, MSG_GETBLOCKS);
     }
 }

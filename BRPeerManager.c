@@ -1349,7 +1349,9 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
         block = NULL;
     }
     else { // new block is on a fork
-        peer_log(peer, "chain fork reached height %"PRIu32, block->height);
+    
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "chain fork reached height %"PRIu32, block->height);
         BRSetAdd(manager->blocks, block);
 
         if (block->height > manager->lastBlock->height) { // check if fork is now longer than main chain
