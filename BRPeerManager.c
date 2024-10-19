@@ -398,7 +398,8 @@ static void _updateFilterPingDone(void *info, int success)
 
     if (success) {
         pthread_mutex_lock(&manager->lock);
-        peer_log(peer, "updating filter with newly created wallet addresses");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "updating filter with newly created wallet addresses");
         if (manager->bloomFilter) BRBloomFilterFree(manager->bloomFilter);
         manager->bloomFilter = NULL;
 
@@ -435,7 +436,8 @@ static void _BRPeerManagerUpdateFilter(BRPeerManager *manager)
     if (manager->downloadPeer && (manager->downloadPeer->flags & PEER_FLAG_NEEDSUPDATE) == 0) {
         BRPeerSetNeedsFilterUpdate(manager->downloadPeer, 1);
         manager->downloadPeer->flags |= PEER_FLAG_NEEDSUPDATE;
-        peer_log(manager->downloadPeer, "filter update needed, waiting for pong");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(manager->downloadPeer, "filter update needed, waiting for pong");
         info = calloc(1, sizeof(*info));
         assert(info != NULL);
         info->peer = manager->downloadPeer;
@@ -510,7 +512,8 @@ static void _requestUnrelayedTxGetdataDone(void *info, int success)
             
             if (! isPublishing && _BRTxPeerListCount(manager->txRelays, hash) == 0 &&
                 _BRTxPeerListCount(manager->txRequests, hash) == 0) {
-                peer_log(peer, "removing tx unconfirmed at: %d, txHash: %s", manager->lastBlock->height, u256hex(hash));
+                // DEV Uncomment to view logs. Verbose
+                // peer_log(peer, "removing tx unconfirmed at: %d, txHash: %s", manager->lastBlock->height, u256hex(hash));
                 assert(tx[i - 1]->blockHeight == TX_UNCONFIRMED);
                 BRWalletRemoveTransaction(manager->wallet, hash);
             }
@@ -575,10 +578,12 @@ static void _mempoolDone(void *info, int success)
     free(info);
 
     if (success) {
-        peer_log(peer, "mempool request finished");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "mempool request finished");
         pthread_mutex_lock(&manager->lock);
         if (manager->syncStartHeight > 0) {
-            peer_log(peer, "sync succeeded");
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "sync succeeded");
             syncFinished = 1;
             _BRPeerManagerSyncStopped(manager);
         }
@@ -608,7 +613,8 @@ static void _loadBloomFilterDone(void *info, int success)
         free(info);
 
         if (peer == manager->downloadPeer) {
-            peer_log(peer, "sync succeeded");
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "sync succeeded");
             _BRPeerManagerSyncStopped(manager);
             pthread_mutex_unlock(&manager->lock);
             if (manager->syncStopped) manager->syncStopped(manager->info, 0);
@@ -751,19 +757,23 @@ static void _peerConnected(void *info)
 
     // TODO: XXX does this work with 0.11 pruned nodes?
     if ((peer->services & manager->params->services) != manager->params->services) {
-        peer_log(peer, "unsupported node type");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "unsupported node type");
         BRPeerDisconnect(peer);
     }
     else if ((peer->services & SERVICES_NODE_NETWORK) != SERVICES_NODE_NETWORK) {
-        peer_log(peer, "node doesn't carry full blocks");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "node doesn't carry full blocks");
         BRPeerDisconnect(peer);
     }
     else if (BRPeerLastBlock(peer) + 10 < manager->lastBlock->height) {
-        peer_log(peer, "node isn't synced");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "node isn't synced");
         BRPeerDisconnect(peer);
     }
     else if (BRPeerVersion(peer) >= 70011 && (peer->services & SERVICES_NODE_BLOOM) != SERVICES_NODE_BLOOM) {
-        peer_log(peer, "node doesn't support SPV mode");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "node doesn't support SPV mode");
         BRPeerDisconnect(peer);
     }
     else if (manager->downloadPeer && // check if we should stick with the existing download peer
@@ -792,7 +802,8 @@ static void _peerConnected(void *info)
         }
         
         if (manager->downloadPeer) {
-            peer_log(peer, "selecting new download peer with higher reported lastblock");
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "selecting new download peer with higher reported lastblock");
             BRPeerDisconnect(manager->downloadPeer);
         }
         manager->downloadPeer = peer;
@@ -875,7 +886,8 @@ static void _peerDisconnected(void *info, int error)
         array_clear(manager->peers);
         txError = ENOTCONN; // trigger any pending tx publish callbacks
         willSave = 1;
-        peer_log(peer, "sync failed");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "sync failed");
     }
     else if (manager->connectFailureCount < MAX_CONNECT_FAILURES) willReconnect = 1;
 
@@ -918,7 +930,8 @@ static void _peerRelayedPeers(void *info, const BRPeer peers[], size_t peersCoun
     time_t now = time(NULL);
 
     pthread_mutex_lock(&manager->lock);
-    peer_log(peer, "relayed %zu peer(s)", peersCount);
+    // DEV Uncomment to view logs. Verbose
+    // peer_log(peer, "relayed %zu peer(s)", peersCount);
 
     array_add_array(manager->peers, peers, peersCount);
     qsort(manager->peers, array_count(manager->peers), sizeof(*manager->peers), _peerTimestampCompare);
@@ -1037,7 +1050,8 @@ static void _peerHasTx(void *info, UInt256 txHash)
 
     pthread_mutex_lock(&manager->lock);
     tx = BRWalletTransactionForHash(manager->wallet, txHash);
-    peer_log(peer, "has tx: %s", u256hex(txHash));
+    // DEV Uncomment to view logs. Verbose
+    // peer_log(peer, "has tx: %s", u256hex(txHash));
 
     for (size_t i = array_count(manager->publishedTx); i > 0; i--) { // see if tx is in list of published tx
         if (UInt256Eq(manager->publishedTxHashes[i - 1], txHash)) {
@@ -1088,7 +1102,8 @@ static void _peerRejectedTx(void *info, UInt256 txHash, uint8_t code)
     BRTransaction *tx, *t;
 
     pthread_mutex_lock(&manager->lock);
-    peer_log(peer, "rejected tx: %s", u256hex(txHash));
+    // DEV Uncomment to view logs. Verbose
+    // peer_log(peer, "rejected tx: %s", u256hex(txHash));
     tx = BRWalletTransactionForHash(manager->wallet, txHash);
     _BRTxPeerListRemovePeer(manager->txRequests, txHash, peer);
 
@@ -1131,7 +1146,8 @@ static int _BRPeerManagerVerifyBlock(BRPeerManager *manager, BRMerkleBlock *bloc
         }
 
         if (! b) {
-            peer_log(peer, "missing previous difficulty tansition, can't verify block: %s", u256hex(block->blockHash));
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "missing previous difficulty tansition, can't verify block: %s", u256hex(block->blockHash));
             r = 0;
         }
         else prevBlock = b->prevBlock;
@@ -1149,8 +1165,9 @@ static int _BRPeerManagerVerifyBlock(BRPeerManager *manager, BRMerkleBlock *bloc
 
     // verify block difficulty
     if (r && ! manager->params->verifyDifficulty(block, manager->blocks)) {
-        peer_log(peer, "relayed block with invalid difficulty target %x, blockHash: %s", block->target,
-                 u256hex(block->blockHash));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "relayed block with invalid difficulty target %x, blockHash: %s", block->target,
+        //          u256hex(block->blockHash));
         r = 0;
     }
 
@@ -1159,8 +1176,9 @@ static int _BRPeerManagerVerifyBlock(BRPeerManager *manager, BRMerkleBlock *bloc
 
         // verify blockchain checkpoints
         if (checkpoint && ! BRMerkleBlockEq(block, checkpoint)) {
-            peer_log(peer, "relayed a block that differs from the checkpoint at height %"PRIu32", blockHash: %s, "
-                     "expected: %s", block->height, u256hex(block->blockHash), u256hex(checkpoint->blockHash));
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "relayed a block that differs from the checkpoint at height %"PRIu32", blockHash: %s, "
+            //          "expected: %s", block->height, u256hex(block->blockHash), u256hex(checkpoint->blockHash));
             r = 0;
         }
     }
@@ -1209,8 +1227,9 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
         // false positive rate sanity check
         if (BRPeerConnectStatus(peer) == BRPeerStatusConnected &&
             manager->fpRate > BLOOM_DEFAULT_FALSEPOSITIVE_RATE*10.0) {
-            peer_log(peer, "bloom filter false positive rate %f too high after %"PRIu32" blocks, disconnecting...",
-                     manager->fpRate, manager->lastBlock->height + 1 - manager->filterUpdateHeight);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "bloom filter false positive rate %f too high after %"PRIu32" blocks, disconnecting...",
+            //          manager->fpRate, manager->lastBlock->height + 1 - manager->filterUpdateHeight);
 
             //Resets the fpRate to the reduced fpRate to allow further connection
             manager->fpRate = BLOOM_REDUCED_FALSEPOSITIVE_RATE;
@@ -1238,9 +1257,10 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
         }
     }
     else if (! prev) { // block is an orphan
-        peer_log(peer, "relayed orphan block %s, previous %s, last block is %s, height %"PRIu32,
-                 u256hex(block->blockHash), u256hex(block->prevBlock), u256hex(manager->lastBlock->blockHash),
-                 manager->lastBlock->height);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "relayed orphan block %s, previous %s, last block is %s, height %"PRIu32,
+        //          u256hex(block->blockHash), u256hex(block->prevBlock), u256hex(manager->lastBlock->blockHash),
+        //          manager->lastBlock->height);
         
         if (block->timestamp + 7*24*60*60 < time(NULL)) { // ignore orphans older than one week ago
             BRMerkleBlockFree(block);
@@ -1253,8 +1273,8 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
                 UInt256 locators[_BRPeerManagerBlockLocators(manager, NULL, 0)];
                 size_t locatorsCount = _BRPeerManagerBlockLocators(manager, locators,
                                                                    sizeof(locators)/sizeof(*locators));
-
-                peer_log(peer, "calling getblocks");
+                // DEV Uncomment to view logs. Verbose
+                // peer_log(peer, "calling getblocks");
                 BRPeerSendGetblocks(peer, locators, locatorsCount, UINT256_ZERO);
             }
 
@@ -1263,7 +1283,8 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
         }
     }
     else if (! _BRPeerManagerVerifyBlock(manager, block, prev, peer)) { // block is invalid
-        peer_log(peer, "relayed invalid block");
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "relayed invalid block");
         BRMerkleBlockFree(block);
         block = NULL;
         _BRPeerManagerPeerMisbehavin(manager, peer);
@@ -1293,7 +1314,8 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
     }
     else if (BRSetContains(manager->blocks, block)) { // we already have the block (or at least the header)
         if ((block->height % 500) == 0 || txCount > 0 || block->height >= BRPeerLastBlock(peer)) {
-            peer_log(peer, "relayed existing block #%"PRIu32, block->height);
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "relayed existing block #%"PRIu32, block->height);
         }
 
         b = manager->lastBlock;
@@ -1314,13 +1336,15 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
     }
     else if (manager->lastBlock->height < BRPeerLastBlock(peer) &&
              block->height > manager->lastBlock->height + 1) { // special case, new block mined durring rescan
-        peer_log(peer, "marking new block #%"PRIu32" as orphan until rescan completes", block->height);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "marking new block #%"PRIu32" as orphan until rescan completes", block->height);
         BRSetAdd(manager->orphans, block); // mark as orphan til we're caught up
         manager->lastOrphan = block;
     }
     else if (block->height <= manager->params->checkpoints[manager->params->checkpointsCount - 1].height) { // old fork
-        peer_log(peer, "ignoring block on fork older than most recent checkpoint, block #%"PRIu32", hash: %s",
-                 block->height, u256hex(block->blockHash));
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "ignoring block on fork older than most recent checkpoint, block #%"PRIu32", hash: %s",
+        //          block->height, u256hex(block->blockHash));
         BRMerkleBlockFree(block);
         block = NULL;
     }
@@ -1336,9 +1360,8 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
                 b = BRSetGet(manager->blocks, &b->prevBlock);
                 if (b && b->height < b2->height) b2 = BRSetGet(manager->blocks, &b2->prevBlock);
             }
-
-            peer_log(peer, "reorganizing chain from height %"PRIu32", new height is %"PRIu32, b->height, block->height);
-
+            // DEV Uncomment to view logs. Verbose
+            // peer_log(peer, "reorganizing chain from height %"PRIu32", new height is %"PRIu32, b->height, block->height);
             BRWalletSetTxUnconfirmedAfter(manager->wallet, b->height); // mark tx after the join point as unconfirmed
 
             b = block;
@@ -1434,7 +1457,8 @@ static void _peerSetFeePerKb(void *info, uint64_t feePerKb)
 
     if (secondFeePerKb*3/2 > DEFAULT_FEE_PER_KB && secondFeePerKb*3/2 <= MAX_FEE_PER_KB &&
         secondFeePerKb*3/2 > BRWalletFeePerKb(manager->wallet)) {
-        peer_log(peer, "increasing feePerKb to %"PRIu64" based on feefilter messages from peers", secondFeePerKb*3/2);
+        // DEV Uncomment to view logs. Verbose
+        // peer_log(peer, "increasing feePerKb to %"PRIu64" based on feefilter messages from peers", secondFeePerKb*3/2);
         BRWalletSetFeePerKb(manager->wallet, secondFeePerKb*3/2);
     }
 
