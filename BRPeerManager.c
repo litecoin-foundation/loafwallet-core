@@ -951,7 +951,9 @@ static void _peerRelayedTx(void *info, BRTransaction *tx)
     size_t relayCount = 0;
 
     pthread_mutex_lock(&manager->lock);
-    peer_log(peer, "relayed tx: %s", u256hex(tx->txHash));
+
+    // DEV Uncomment to see relayed tx. Verbose
+    // peer_log(peer, "relayed tx: %s", u256hex(tx->txHash));
     
     for (size_t i = array_count(manager->publishedTx); i > 0; i--) { // see if tx is in list of published tx
         if (UInt256Eq(manager->publishedTxHashes[i - 1], tx->txHash)) {
@@ -1268,7 +1270,8 @@ static void _peerRelayedBlock(void *info, BRMerkleBlock *block)
     }
     else if (UInt256Eq(block->prevBlock, manager->lastBlock->blockHash)) { // new block extends main chain
         if ((block->height % 500) == 0 || txCount > 0 || block->height >= BRPeerLastBlock(peer)) {
-            peer_log(peer, "adding block #%"PRIu32", false positive rate: %f", block->height, manager->fpRate);
+            // DEV Uncomment to see tx hash. Verbose
+            // peer_log(peer, "adding block #%"PRIu32", false positive rate: %f", block->height, manager->fpRate);
         }
 
         BRSetAdd(manager->blocks, block);
