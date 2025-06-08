@@ -414,8 +414,17 @@ static int _BRPeerAcceptTxMessage(BRPeer *peer, const uint8_t *msg, size_t msgLe
     else {
         txHash = tx->txHash;
         peer_log(peer, "got tx: %s", u256hex(txHash));
+        
+        size_t txSize = BRTransactionSize(tx);
+        uint64_t feeAmount = BRTransactionStandardFee(tx);
 
-        if (ctx->relayedTx) {
+        if (txSize > 0 && tx->blockHeight == TX_UNCONFIRMED && feeAmount/txSize < 10) {
+            // don't relay txs with low fees
+            BRTransactionFree(tx);
+            if (ctx->rejectedTx) ctx->rejectedTx(ctx->info, txHash, REJECT_LOWFEE);
+            r = 1;
+        }
+        else if (ctx->relayedTx) {
             ctx->relayedTx(ctx->info, tx);
         }
         else BRTransactionFree(tx);
